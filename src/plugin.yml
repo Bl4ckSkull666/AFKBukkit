@@ -1,0 +1,6 @@
+name: AFKBukkit
+version: 0.1
+author: Bl4ckSkull666
+main: de.bl4ckskull666.afkbukkit.AFKBukkit
+website: http://www.AMC-Server.de
+prefix: AFKB
