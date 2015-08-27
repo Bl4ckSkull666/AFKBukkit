@@ -18,6 +18,7 @@ import org.bukkit.event.player.PlayerAnimationEvent;
 public class PlayerAnimation implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerAnimation(PlayerAnimationEvent e) {
-        AFKBukkit.getPlugin().sendPluginMessage(e.getPlayer());
+        if(AFKBukkit.getPlugin().getConfig().getBoolean("check.player-animation", false))
+            AFKBukkit.getPlugin().sendPluginMessage(e.getPlayer());
     }
 }

@@ -90,6 +90,7 @@ public class AFKBukkit extends JavaPlugin implements PluginMessageListener {
         
         getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
         getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", this);
+        
         getServer().getPluginManager().registerEvents(new PlayerJoin(), this);
         getServer().getPluginManager().registerEvents(new PlayerLeft(), this);
         getServer().getPluginManager().registerEvents(new VehicleEntityCollision(), this);
@@ -150,28 +151,29 @@ public class AFKBukkit extends JavaPlugin implements PluginMessageListener {
     }
     
     public void sendPluginMessage(Player p) {
-        if(_lastFire.containsKey(p.getUniqueId()) && 
-                ((System.currentTimeMillis()-_lastFire.get(p.getUniqueId()))/1000) < 30 &&
-                !_isAFK.contains(p.getUniqueId()))
+        if((_lastFire.containsKey(p.getUniqueId()) && 
+                ((System.currentTimeMillis()-_lastFire.get(p.getUniqueId()))/1000) < 30))
             return;
 
         _lastFire.put(p.getUniqueId(), System.currentTimeMillis());
         
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeUTF("AFKBPlayer");
+        out.writeUTF(p.getUniqueId().toString());
+        ByteArrayDataInput in = ByteStreams.newDataInput(out.toByteArray());
+        debugMe("Send PluginMessage with " + in.readLine());
         p.sendPluginMessage(this, "BungeeCord", out.toByteArray());
+        
     }
     
     public static void hidePlayer(Player p, boolean hide) {
         if(hide) {
-            _isAFK.add(p.getUniqueId());
             for(Player pl: Bukkit.getOnlinePlayers()) {
                 if(!pl.hasPermission("amcserver.team") && !pl.getUniqueId().equals(p.getUniqueId())) {
                     pl.hidePlayer(p);
                 }
             }
         } else {
-            _isAFK.remove(p.getUniqueId());
             for(Player pl: Bukkit.getOnlinePlayers()) {
                 pl.showPlayer(p);
             }
@@ -187,6 +189,11 @@ public class AFKBukkit extends JavaPlugin implements PluginMessageListener {
     }
     
     public static void setPlayerStatus(Player p, boolean isAway) {
+        if(isAway)
+            _isAFK.add(p.getUniqueId());
+        else
+            _isAFK.remove(p.getUniqueId());
+        
         if(_plugin.getConfig().getBoolean("by-afk.no-item-pickup", false))
             p.setCanPickupItems(!isAway);
         if(_plugin.getConfig().getBoolean("by-afk.use-custom-name", false)) {
@@ -216,11 +223,20 @@ public class AFKBukkit extends JavaPlugin implements PluginMessageListener {
     }
     
     public static void debugMe(String msg) {
-        _plugin.getLogger().log(Level.INFO, "DEBUG : {0}", msg);
+        if(_plugin.getConfig().getBoolean("debug", false))
+            _plugin.getLogger().log(Level.INFO, "[DEBUG] {0}", msg);
     }
     
     public static AFKBukkit getPlugin() {
         return _plugin;
+    }
+    
+    public static void checkSwitchPlayer(UUID uuid, boolean status) {
+        if(status && !_isAFK.contains(uuid) || !status && _isAFK.contains(uuid)) {
+            Player p = Bukkit.getPlayer(uuid);
+            if(p != null)
+                setPlayerStatus(p, status);
+        }
     }
     
     @Override
@@ -231,17 +247,23 @@ public class AFKBukkit extends JavaPlugin implements PluginMessageListener {
         ByteArrayDataInput in = ByteStreams.newDataInput(m);
         String sub = in.readUTF();
         if(sub.equalsIgnoreCase("AFKBPlayer")) {
+            UUID uuid = UUID.fromString(in.readUTF());
             boolean bol = in.readBoolean();
-            AFKBukkit.setPlayerStatus(p, bol);
+            debugMe("Receive " + uuid.toString() + " with " + bol);
+            AFKBukkit.checkSwitchPlayer(uuid, bol);
         } else if(sub.equalsIgnoreCase("AFKBConfig")) {
+            debugMe("Receive Configuration");
             String cat = in.readUTF();
             String conf = in.readUTF();
             String val = in.readUTF();
             String add = null;
             while((add = in.readUTF()) != null)
                 val += " " + add;
-            if(cat != null && conf != null && val != null)
+            if(cat != null && conf != null && val != null) {
                 AFKBukkit.getPlugin().getConfig().set(cat + "." + conf, val);
+                debugMe("Receive " + cat + "." + conf + " Configuration from Bungee and set " + val + " it.");
+                saveConfig();
+            }
         }
     }
 }

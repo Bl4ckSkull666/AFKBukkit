@@ -18,11 +18,12 @@ import org.bukkit.event.player.PlayerJoinEvent;
  * @author PapaHarni
  */
 public class PlayerJoin implements Listener {
-    private boolean _firstJoined = false;
+    private static boolean _firstJoined = false;
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerJoin(PlayerJoinEvent e) {
         AFKBukkit.setHiddenPlayers(e.getPlayer());
         if(AFKBukkit.getPlugin().getConfig().getBoolean("use-bungeecord-config", false) && !_firstJoined) {
+            AFKBukkit.debugMe("Request Configuration");
             ByteArrayDataOutput out = ByteStreams.newDataOutput();
             out.writeUTF("AFKBConfig");
             e.getPlayer().sendPluginMessage(AFKBukkit.getPlugin(), "BungeeCord", out.toByteArray());

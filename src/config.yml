@@ -1,4 +1,4 @@
-use-bungee-config: true
+use-bungeecord-config: true
 check:
   inventory-click: true
   inventory-close: true
