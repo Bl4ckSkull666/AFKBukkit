@@ -152,13 +152,15 @@ public class AFKBukkit extends JavaPlugin implements PluginMessageListener {
     
     public void sendPluginMessage(Player p) {
         if((_lastFire.containsKey(p.getUniqueId()) && 
-                ((System.currentTimeMillis()-_lastFire.get(p.getUniqueId()))/1000) < 30))
+                ((System.currentTimeMillis()-_lastFire.get(p.getUniqueId()))/1000) < 30) && 
+                !_isAFK.contains(p.getUniqueId()))
             return;
 
         _lastFire.put(p.getUniqueId(), System.currentTimeMillis());
         
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
-        out.writeUTF("AFKBPlayer");
+        out.writeUTF("AFKB");
+        out.writeUTF("Player");
         out.writeUTF(p.getUniqueId().toString());
         ByteArrayDataInput in = ByteStreams.newDataInput(out.toByteArray());
         debugMe("Send PluginMessage with " + in.readLine());
@@ -246,22 +248,26 @@ public class AFKBukkit extends JavaPlugin implements PluginMessageListener {
 
         ByteArrayDataInput in = ByteStreams.newDataInput(m);
         String sub = in.readUTF();
-        if(sub.equalsIgnoreCase("AFKBPlayer")) {
+        if(!sub.equalsIgnoreCase("AFKB"))
+            return;
+        
+        String cat = in.readUTF();
+        if(cat.equalsIgnoreCase("Player")) {
             UUID uuid = UUID.fromString(in.readUTF());
             boolean bol = in.readBoolean();
             debugMe("Receive " + uuid.toString() + " with " + bol);
             AFKBukkit.checkSwitchPlayer(uuid, bol);
-        } else if(sub.equalsIgnoreCase("AFKBConfig")) {
+        } else if(cat.equalsIgnoreCase("Config")) {
             debugMe("Receive Configuration");
-            String cat = in.readUTF();
+            String cate = in.readUTF();
             String conf = in.readUTF();
             String val = in.readUTF();
             String add = null;
             while((add = in.readUTF()) != null)
                 val += " " + add;
-            if(cat != null && conf != null && val != null) {
-                AFKBukkit.getPlugin().getConfig().set(cat + "." + conf, val);
-                debugMe("Receive " + cat + "." + conf + " Configuration from Bungee and set " + val + " it.");
+            if(cate != null && conf != null && val != null) {
+                AFKBukkit.getPlugin().getConfig().set(cate + "." + conf, val);
+                debugMe("Receive " + cate + "." + conf + " Configuration from Bungee and set " + val + " it.");
                 saveConfig();
             }
         }

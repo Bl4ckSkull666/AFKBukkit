@@ -25,7 +25,8 @@ public class PlayerJoin implements Listener {
         if(AFKBukkit.getPlugin().getConfig().getBoolean("use-bungeecord-config", false) && !_firstJoined) {
             AFKBukkit.debugMe("Request Configuration");
             ByteArrayDataOutput out = ByteStreams.newDataOutput();
-            out.writeUTF("AFKBConfig");
+            out.writeUTF("AFKB");
+            out.writeUTF("Config");
             e.getPlayer().sendPluginMessage(AFKBukkit.getPlugin(), "BungeeCord", out.toByteArray());
             _firstJoined = true;
         }
