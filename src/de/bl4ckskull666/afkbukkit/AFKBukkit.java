@@ -196,23 +196,23 @@ public class AFKBukkit extends JavaPlugin implements PluginMessageListener {
         else
             _isAFK.remove(p.getUniqueId());
         
-        if(_plugin.getConfig().getBoolean("by-afk.no-item-pickup", false))
+        if(_plugin.getConfig().getBoolean("on-afk.no-item-pickup", false))
             p.setCanPickupItems(!isAway);
-        if(_plugin.getConfig().getBoolean("by-afk.use-custom-name", false)) {
+        if(_plugin.getConfig().getBoolean("on-afk.use-custom-name", false)) {
             p.setCustomNameVisible(isAway);
             if(isAway)
-                p.setCustomName(_plugin.getConfig().getString("by-afk.get-custom-name", ""));
+                p.setCustomName(_plugin.getConfig().getString("on-afk.get-custom-name", ""));
             else
                 p.setCustomName(p.getName());
         }
         
-        if(_plugin.getConfig().getBoolean("by-afk.ignore-by-sleeping", false))
+        if(_plugin.getConfig().getBoolean("on-afk.ignore-by-sleeping", false))
             p.setSleepingIgnored(isAway);
         
-        if(_plugin.getConfig().getBoolean("by-afk.invisible", false))
+        if(_plugin.getConfig().getBoolean("on-afk.invisible", false))
             hidePlayer(p, isAway);
         
-        if(_plugin.getConfig().getBoolean("by-afk.use-custom-name", false)) {
+        if(_plugin.getConfig().getBoolean("on-afk.use-custom-name", false)) {
             if(isAway)
                 p.setNoDamageTicks(Integer.MAX_VALUE);
             else
@@ -259,17 +259,13 @@ public class AFKBukkit extends JavaPlugin implements PluginMessageListener {
             AFKBukkit.checkSwitchPlayer(uuid, bol);
         } else if(cat.equalsIgnoreCase("Config")) {
             debugMe("Receive Configuration");
-            String cate = in.readUTF();
             String conf = in.readUTF();
-            String val = in.readUTF();
-            String add = null;
-            while((add = in.readUTF()) != null)
-                val += " " + add;
-            if(cate != null && conf != null && val != null) {
-                AFKBukkit.getPlugin().getConfig().set(cate + "." + conf, val);
-                debugMe("Receive " + cate + "." + conf + " Configuration from Bungee and set " + val + " it.");
-                saveConfig();
+            String val = in.readUTF().replace("__--__", " ");
+            if(conf != null && val != null) {
+                AFKBukkit.getPlugin().getConfig().set(conf, val);
+                debugMe("Receive " + conf + " Configuration from Bungee and set " + val + " it.");
             }
+            saveConfig();
         }
     }
 }
