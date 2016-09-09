@@ -198,6 +198,8 @@ public class AFKBukkit extends JavaPlugin implements PluginMessageListener {
         
         if(_plugin.getConfig().getBoolean("on-afk.no-item-pickup", false))
             p.setCanPickupItems(!isAway);
+        if(_plugin.getConfig().getBoolean("on-afk.no-collidable", false))
+            p.setCollidable(!isAway);
         if(_plugin.getConfig().getBoolean("on-afk.use-custom-name", false)) {
             p.setCustomNameVisible(isAway);
             if(isAway)
